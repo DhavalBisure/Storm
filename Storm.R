@@ -2,7 +2,7 @@
 if (!file.exists("StormData.csv.bz2")) 
        fileURL <- 'https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2'
        download.file(fileURL, destfile='StormData.csv.bz2')
-  }
+  
 ##Reading the daata
 storm <- read.csv(bzfile('StormData.csv.bz2'),header=TRUE, stringsAsFactors = FALSE)
 
