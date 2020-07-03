@@ -40,3 +40,19 @@ injuryplot <- ggplot(InjuryData,aes(y=Injuries,x= reorder(Event, -Injuries))) +
 library(gridExtra)
 grid.arrange(fatalplot,injuryplot,ncol=2)
  
+##Finding Total Economic Damage
+propdamage <- aggregate(storm$PROPDMG, by = list(storm$EVTYPE),FUN=sum)
+names(propdamage) <- c("Event","PropDamage")
+cropdamage <- aggregate(storm$CROPDMG, by = list(storm$EVTYPE),FUN=sum)
+names(cropdamage) <- c("Event","CropDamage")
+TotalDamage <- merge(propdamage,cropdamage, by.x = "Event", by.y = "Event")
+TotalDamage$Total <- TotalDamage$PropDamage + TotalDamage$CropDamage
+TotalDamage <- TotalDamage[order(-TotalDamage$Total),]
+head(TotalDamage,n=10)
+
+##Making plot
+options(scipen = 3500000)
+damageplot <- ggplot(TotalDamage, aes(x=reorder(Event, -Total),y = Total)) +                          
+  geom_bar(stat="identity",fill="red") +
+  theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5)) +
+  ggtitle("Events with Highest Damage") + xlab("Events") + ylab("Amount of Damage($)")
