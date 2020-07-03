@@ -1,30 +1,66 @@
-##Download the data
-if (!file.exists("StormData.csv.bz2")) 
+---
+title: "Weather Event Analysis"
+author: "DBisure"
+date: "03/07/2020"
+output: html_document
+---
+
+
+# Synopsis
+There are many weather events happening throughout the world. Some events can be destructive not only to human health but can causive massive economic damage. In this analysis we will try to figure out which weather events have the most effect. To make this analyis we wil be using the dataset from National Weather Service. This dataset contains data from 1950 to end of November 2011.
+
+# Data Processing
+We will download the file using R. We will summarizes the data and check for any missing or NA values
+
+```{r}
+if (!file.exists("StormData.csv.bz2")){ 
        fileURL <- 'https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2'
        download.file(fileURL, destfile='StormData.csv.bz2')
-  
-##Reading the daata
+}
 storm <- read.csv(bzfile('StormData.csv.bz2'),header=TRUE, stringsAsFactors = FALSE)
-
-##Summarising the data and checking for NA values in needed columns
 summary(storm)
+```
 
-##Finding events with highest Fatality
+We are concerned with only a few columns namely: EVTYPE, FATALITIES, INJURIES, PROPDMG, CROPDMG.
+Lets see if there are any NA values present
+
+```{r}
+mean(is.na(storm$EVTYPE))
+mean(is.na(storm$FATALITIES))
+mean(is.na(storm$INJURIES))
+mean(is.na(storm$PROPDMG))
+mean(is.na(storm$CROPDMG))
+```
+No column consists of NA values
+
+# Results
+We will addressing 2 Questions, which weather event causes maximum human damage and which event causes maximum economic damage
+
+## Finding Total Human Damage
+
+### Total Fatalities
+```{r}
 FatalityData <- aggregate(storm$FATALITIES, by = list(storm$EVTYPE), FUN = sum)
 names(FatalityData) <- c("Event","Fatalities")
 FatalityData <- FatalityData[order(-FatalityData$Fatalities),]
 FatalityData <- FatalityData[1:20,]
 head(FatalityData)
+```
 
+### Total Injuries
 
-##Finding events with highest Injuries
+```{r}
 InjuryData <- aggregate(storm$INJURIES, by = list(storm$EVTYPE), FUN = sum)
 names(InjuryData) <- c("Event","Injuries")
 InjuryData <- InjuryData[order(-InjuryData$Injuries),]
 InjuryData <- InjuryData[1:20,]
 head(InjuryData)
 
-##Creating plot for harmful events
+```
+
+### Creating Plot
+
+```{r}
 library(ggplot2)
 
 fatalplot <- ggplot(FatalityData,aes(y=Fatalities,x= reorder(Event, -Fatalities))) +
@@ -39,8 +75,14 @@ injuryplot <- ggplot(InjuryData,aes(y=Injuries,x= reorder(Event, -Injuries))) +
 
 library(gridExtra)
 grid.arrange(fatalplot,injuryplot,ncol=2)
- 
-##Finding Total Economic Damage
+```
+
+### As it can be seen Tornado causes maximum fatalities as well injuries
+
+## Finding Total Economic Damage
+
+### Total Property Damage and Total Crop Damange
+```{r}
 propdamage <- aggregate(storm$PROPDMG, by = list(storm$EVTYPE),FUN=sum)
 names(propdamage) <- c("Event","PropDamage")
 cropdamage <- aggregate(storm$CROPDMG, by = list(storm$EVTYPE),FUN=sum)
@@ -50,10 +92,17 @@ TotalDamage$Total <- TotalDamage$PropDamage + TotalDamage$CropDamage
 TotalDamage <- TotalDamage[order(-TotalDamage$Total),]
 TotalDamage <- TotalDamage[1:20,]
 head(TotalDamage,n=10)
+```
 
-##Making plot
+### Creating a plot 
+
+```{r}
 options(scipen = 3500000)
 damageplot <- ggplot(TotalDamage, aes(x=reorder(Event, -Total),y = Total)) +                          
   geom_bar(stat="identity",fill="red") +
   theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5)) +
   ggtitle("Events with Highest Damage") + xlab("Events") + ylab("Amount of Damage($)")
+damageplot
+```
+
+### As we can see Tornadoes cause maximum economic damage
